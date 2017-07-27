@@ -17,7 +17,7 @@ class Encrypter {
 	 *
 	 * @var string
 	 */
-	protected $cipher = MCRYPT_RIJNDAEL_128;
+	protected $cipher = 'AES-256-CBC';
 
 	/**
 	 * The mode used for encryption.
@@ -52,7 +52,7 @@ class Encrypter {
 	 */
 	public function encrypt($value)
 	{
-		$iv = mcrypt_create_iv($this->getIvSize(), $this->getRandomizer());
+		$iv = openssl_random_pseudo_bytes($this->getIvSize());
 
 		$value = base64_encode($this->padAndMcrypt($value, $iv));
 
@@ -75,7 +75,7 @@ class Encrypter {
 	{
 		$value = $this->addPadding(serialize($value));
 
-		return mcrypt_encrypt($this->cipher, $this->key, $value, $this->mode, $iv);
+                return openssl_encrypt($value, $this->cipher, $this->key, OPENSSL_RAW_DATA, $iv);
 	}
 
 	/**
@@ -111,7 +111,7 @@ class Encrypter {
 	{
 		try
 		{
-			return mcrypt_decrypt($this->cipher, $this->key, $value, $this->mode, $iv);
+                        return openssl_decrypt($value, $this->cipher, $this->key, OPENSSL_RAW_DATA, $iv);
 		}
 		catch (\Exception $e)
 		{
@@ -239,7 +239,7 @@ class Encrypter {
 	 */
 	protected function getIvSize()
 	{
-		return mcrypt_get_iv_size($this->cipher, $this->mode);
+		return openssl_cipher_iv_length($this->cipher);
 	}
 
 	/**
@@ -302,7 +302,7 @@ class Encrypter {
 	 */
 	protected function updateBlockSize()
 	{
-		$this->block = mcrypt_get_iv_size($this->cipher, $this->mode);
+		$this->block = openssl_cipher_iv_length($this->cipher);
 	}
 
 }
